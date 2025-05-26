@@ -76,7 +76,7 @@ async function predictLoop(video) {
         const index = prediction.argMax(-1).dataSync()[0];
         const label = labels[index] || 'Tidak dikenali';
 
-        document.getElementById('result').innerText = `Prediksi: ${label} (kelas ${index})`;
+        document.getElementById('result').innerText = `Prediksi: ${label})`;
 
         await tf.nextFrame(); // Tunggu frame berikutnya
     }
