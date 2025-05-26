@@ -16,12 +16,19 @@ async function loadLabels() {
 }
 
 // Ambil webcam
+// Ambil webcam (kamera belakang jika ada)
 async function setupWebcam() {
     const webcamElement = document.getElementById('webcam');
 
+    const constraints = {
+        video: {
+            facingMode: { exact: "environment" } // Meminta kamera belakang
+        }
+    };
+
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
             webcamElement.srcObject = stream;
 
             return new Promise((resolve) => {
@@ -30,14 +37,29 @@ async function setupWebcam() {
                 };
             });
         } catch (err) {
-            alert("Gagal mengakses webcam: " + err.message);
-            throw err; // biar tahu errornya dan tidak lanjut
+            // Fallback ke kamera default jika kamera belakang tidak tersedia
+            console.warn("Tidak bisa akses kamera belakang, coba kamera default:", err.message);
+
+            try {
+                const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                webcamElement.srcObject = fallbackStream;
+
+                return new Promise((resolve) => {
+                    webcamElement.onloadedmetadata = () => {
+                        resolve(webcamElement);
+                    };
+                });
+            } catch (fallbackErr) {
+                alert("Gagal mengakses kamera: " + fallbackErr.message);
+                throw fallbackErr;
+            }
         }
     } else {
         alert("Browser Anda tidak mendukung getUserMedia API.");
         throw new Error("getUserMedia not supported");
     }
 }
+
 
 // Fungsi prediksi loop
 async function predictLoop(video) {
